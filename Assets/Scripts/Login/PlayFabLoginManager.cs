@@ -8,7 +8,7 @@ using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine.UI;
-
+using UnityEngine.SceneManagement;
 public class PlayFabLoginManager : MonoBehaviour
 {
     [Header("Paneles de la UI")]
@@ -27,6 +27,9 @@ public class PlayFabLoginManager : MonoBehaviour
     [SerializeField] private TMP_InputField registerPassword;
     [SerializeField] private Button registerButton;  // Acción real de registro
     [SerializeField] private Button goToLogin;       // Cambiar a panel login
+
+    [Header("Texto de error")]
+    [SerializeField] private TMP_Text textError;
 
     private bool showingLogin = true;
 
@@ -78,8 +81,16 @@ public class PlayFabLoginManager : MonoBehaviour
 
         PlayFabClientAPI.LoginWithPlayFab(
             request,
-            result => Debug.Log("✅ Login exitoso: " + result.PlayFabId),
-            error => Debug.LogError("❌ Error login: " + error.GenerateErrorReport())
+            result =>
+            {
+                Debug.Log("✅ Login exitoso: " + result.PlayFabId);
+                SceneManager.LoadSceneAsync("Menu");
+            },
+            error =>
+            {
+                ShowError("Error al iniciar sesión: " + error.ErrorMessage);
+                Debug.LogError("❌ Error login: " + error.GenerateErrorReport());
+            }
         );
     }
 
@@ -107,14 +118,17 @@ public class PlayFabLoginManager : MonoBehaviour
             Password = password,
             RequireBothUsernameAndEmail = true
         },
-        successResult => Login(username, password),
-        PlayFabFailure);
+        successResult =>
+        {
+            Login(username, password);
+        },
+        error =>
+        {
+            ShowError("❌ Error al registrar: " + error.ErrorMessage);
+            Debug.LogError("❌ PlayFab Error: " + error.GenerateErrorReport());
+        });
     }
 
-    private void PlayFabFailure(PlayFabError error)
-    {
-        Debug.LogError("❌ PlayFab Error: " + error.GenerateErrorReport());
-    }
 
     public void ShowLoginPanel()
     {
@@ -130,5 +144,17 @@ public class PlayFabLoginManager : MonoBehaviour
         loginPanel.SetActive(false);
         registerPanel.SetActive(true);
         Debug.Log("🔹 Mostrando panel Registro");
+    }
+
+    private void ShowError(string message)
+    {
+        if (textError != null)
+            textError.text = message;
+    }
+
+    private void ClearError()
+    {
+        if (textError != null)
+            textError.text = "";
     }
 }
