@@ -1,0 +1,19 @@
+# Entorno virtual
+.venv/
+
+# Archivos compilados
+__pycache__/
+*.pyc
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# PyInstaller / build
+build/
+dist/
+*.spec
