@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "username": "jason",
+      "salt": "VXudswf2qUXS1ncP2w+YTA==",
+      "hash": "sCzaXRaE4ASw8qhjhOMSt+utH1AOfRqW/QPvGt21w3M=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
+    }
+  ]
+}
