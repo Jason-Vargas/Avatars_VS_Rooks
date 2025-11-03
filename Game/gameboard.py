@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QFrame, QMessageBox)
 from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QFont, QPalette, QColor
+from .hall_of_fame import HallOfFameDialog
+from .player_name_dialog import PlayerNameDialog
 
 # Constantes del juego
 ROWS = 5
@@ -146,6 +148,12 @@ class GameBoard(QMainWindow):
         
         self.spawn_timer = QTimer()
         self.spawn_timer.timeout.connect(self.spawn_avatar)
+        
+        self.move_timer = QTimer()
+        self.move_timer.timeout.connect(self.move_avatars)
+        
+        # Contador para controlar velocidad de movimiento
+        self.move_counter = 0
         
         self.init_ui()
     
@@ -305,12 +313,14 @@ class GameBoard(QMainWindow):
         # Iniciar timers
         self.game_timer.start(100)  # Loop principal cada 100ms
         self.spawn_timer.start(3000)  # Generar avatar cada 3 segundos
+        self.move_timer.start(1500)  # Mover avatares cada 1.5 segundos
     
     def pause_game(self):
         """Pausa el juego"""
         self.game_running = False
         self.game_timer.stop()
         self.spawn_timer.stop()
+        self.move_timer.stop()
         self.start_btn.setEnabled(True)
         self.start_btn.setText("▶️ Continuar")
         self.pause_btn.setEnabled(False)
@@ -320,6 +330,7 @@ class GameBoard(QMainWindow):
         self.game_running = False
         self.game_timer.stop()
         self.spawn_timer.stop()
+        self.move_timer.stop()
         
         # Limpiar tablero
         for row in self.cells:
@@ -335,6 +346,7 @@ class GameBoard(QMainWindow):
         self.avatars = []
         self.next_rook_id = 0
         self.next_avatar_id = 0
+        self.move_counter = 0
         
         self.start_btn.setText("▶️ Iniciar Juego")
         self.start_btn.setEnabled(True)
@@ -364,9 +376,6 @@ class GameBoard(QMainWindow):
         """Loop principal del juego"""
         if not self.game_running:
             return
-        
-        # Mover avatares
-        self.move_avatars()
         
         # Torres atacan
         self.rooks_attack()
