@@ -24,18 +24,25 @@ class Ui_AvatarsVSRooks(object):
         if not AvatarsVSRooks.objectName():
             AvatarsVSRooks.setObjectName(u"AvatarsVSRooks")
         AvatarsVSRooks.setEnabled(True)
-        AvatarsVSRooks.resize(800, 600)
+        AvatarsVSRooks.resize(804, 600)
         AvatarsVSRooks.setAcceptDrops(True)
         self.centralwidget = QWidget(AvatarsVSRooks)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayoutWidget = QWidget(self.centralwidget)
         self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayoutWidget.setGeometry(QRect(280, 230, 232, 102))
+        self.verticalLayoutWidget.setGeometry(QRect(200, 400, 251, 102))
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.Informacin = QLabel(self.verticalLayoutWidget)
         self.Informacin.setObjectName(u"Informacin")
+        self.Informacin.setEnabled(True)
+        self.Informacin.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
+        self.Informacin.setMouseTracking(False)
+        self.Informacin.setStyleSheet(u"background-color: #FFFFFF;     /* gris oscuro */\n"
+"color: black;                  /* color del texto */\n"
+"border-radius: 8px; ")
+        self.Informacin.setScaledContents(False)
 
         self.verticalLayout.addWidget(self.Informacin)
 
@@ -58,14 +65,21 @@ class Ui_AvatarsVSRooks(object):
 
         self.verticalLayout.addWidget(self.btnEntrar)
 
+        self.fondo = QLabel(self.centralwidget)
+        self.fondo.setObjectName(u"fondo")
+        self.fondo.setGeometry(QRect(-2, -5, 810, 610))
+        self.fondo.setPixmap(QPixmap(u"../images/fondo.jpg"))
+        self.fondo.setScaledContents(True)
         AvatarsVSRooks.setCentralWidget(self.centralwidget)
-        self.menubar = QMenuBar(AvatarsVSRooks)
-        self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 800, 33))
-        AvatarsVSRooks.setMenuBar(self.menubar)
+        self.fondo.raise_()
+        self.verticalLayoutWidget.raise_()
         self.statusbar = QStatusBar(AvatarsVSRooks)
         self.statusbar.setObjectName(u"statusbar")
         AvatarsVSRooks.setStatusBar(self.statusbar)
+        self.menubar = QMenuBar(AvatarsVSRooks)
+        self.menubar.setObjectName(u"menubar")
+        self.menubar.setGeometry(QRect(0, 0, 804, 33))
+        AvatarsVSRooks.setMenuBar(self.menubar)
 
         self.retranslateUi(AvatarsVSRooks)
 
@@ -74,12 +88,13 @@ class Ui_AvatarsVSRooks(object):
 
     def retranslateUi(self, AvatarsVSRooks):
         AvatarsVSRooks.setWindowTitle(QCoreApplication.translate("AvatarsVSRooks", u"MainWindow", None))
-        self.Informacin.setText(QCoreApplication.translate("AvatarsVSRooks", u"Ingrese su nombre de usuario y Contrase\u00f1a", None))
+        self.Informacin.setText(QCoreApplication.translate("AvatarsVSRooks", u"  Ingrese su nombre de usuario y Contrase\u00f1a ", None))
         self.txtUsuario.setInputMask("")
         self.txtUsuario.setText("")
         self.txtUsuario.setPlaceholderText(QCoreApplication.translate("AvatarsVSRooks", u"Usuario", None))
         self.txtPassword.setText("")
         self.txtPassword.setPlaceholderText(QCoreApplication.translate("AvatarsVSRooks", u"Contrase\u00f1a", None))
         self.btnEntrar.setText(QCoreApplication.translate("AvatarsVSRooks", u"Entrar", None))
+        self.fondo.setText("")
     # retranslateUi
 
