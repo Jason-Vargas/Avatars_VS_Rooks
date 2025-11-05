@@ -1,12 +1,13 @@
-import sys
 from PySide6.QtWidgets import QApplication
-from app.views.ventana_inicio import VentanaInicio
+from app.ui.ventana_inicio import LoginWindow
+import sys
+from tools.music_manager import music
 
-def main():
-    app = QApplication(sys.argv)
-    w = VentanaInicio()
-    w.show()
-    sys.exit(app.exec())
+
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    login = LoginWindow()
+    login.show()
+    music.play()
+    sys.exit(app.exec())
