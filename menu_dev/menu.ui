@@ -47,14 +47,14 @@
      <item>
       <widget class="QPushButton" name="btn_halloffame">
        <property name="text">
-        <string>Hall Of Fame</string>
+        <string>Salón de la Fama</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btn_wiki">
        <property name="text">
-        <string>Wiki</string>
+        <string>Instrucciones de Uso</string>
        </property>
       </widget>
      </item>
