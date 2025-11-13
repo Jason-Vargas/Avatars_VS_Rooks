@@ -64,27 +64,32 @@ class MenuWindow(QMainWindow):
         self.set_background()
     
     def start_game(self):
-        """Inicia el juego abriendo GameBoard"""
+        """Inicia el juego importando el Tablero desde juego.py"""
         print("🎯 Iniciando juego…")
         
         try:
-            # Importar aquí para evitar imports circulares
-            from tools.Gameboard import GameBoard
+            # Importar la clase Tablero
+            from game.tablero import Tablero
             
-            print("✅ GameBoard importado correctamente")
+            print("✅ Tablero importado correctamente")
             
-            # Crear y mostrar la ventana del juego
-            self.game_window = GameBoard()
-            print("✅ GameBoard creado")
+            # Crear y mostrar el tablero
+            self.game_window = Tablero()
+            print("✅ Tablero creado")
+            
+            # Aquí puedes inicializar tu lógica del juego
+            # Por ejemplo: colocar personajes, enemigos, etc.
+            self.game_window.actualizar_celda(0, 0, "🎮")
             
             self.game_window.show()
-            print("✅ GameBoard mostrado")
+            print("✅ Tablero mostrado")
             
             # Cerrar el menú (opcional)
             self.close()
             
         except Exception as e:
             print(f"❌ Error al iniciar el juego: {e}")
+            from PyQt6.QtWidgets import QMessageBox
             QMessageBox.critical(self, "Error", f"No se pudo iniciar el juego:\n{e}")
     
     def open_options(self):
@@ -118,23 +123,25 @@ class MenuWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"No se pudo abrir información:\n{e}")
     
     def open_wiki(self):
-        """Abre la ventana de wiki"""
-        print("📖 Abriendo wiki…")
+        """Abre la ventana de instrucciones de uso"""
+        print("📖 Abriendo instrucciones de uso...")
         
         try:
             # Importar desde la carpeta ventanas
-            from ventanas.wiki import WikiWindow
-            
-            self.wiki_window = WikiWindow()
-            self.wiki_window.show()
+            from ventanas.instrucciones_uso import InstruccionesUso
+
+            self.instrucciones_window = InstruccionesUso()
+            self.instrucciones_window.show()
+            print("✅ Instrucciones abiertas correctamente")
             
         except Exception as e:
-            print(f"❌ Error al abrir wiki: {e}")
-            QMessageBox.critical(self, "Error", f"No se pudo abrir wiki:\n{e}")
+            print(f"❌ Error al abrir instrucciones: {e}")
+            QMessageBox.critical(self, "Error", f"No se pudo abrir las instrucciones:\n{e}")
+    
     
     def open_halloffame(self):
         """Abre la ventana de Hall of Fame"""
-        print("🏆 Abriendo Hall of Fame…")
+        print("🏆 Abriendo SALÓN DE LA FAMA…")
         
         try:
             # Importar desde la carpeta ventanas

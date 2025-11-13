@@ -23,10 +23,10 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>390</y>
+      <x>290</x>
+      <y>360</y>
       <width>251</width>
-      <height>102</height>
+      <height>132</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -93,6 +93,13 @@ border-radius: 8px; </string>
       <widget class="QPushButton" name="btnEntrar">
        <property name="text">
         <string>Entrar</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_registrarse">
+       <property name="text">
+        <string>Registrarse</string>
        </property>
       </widget>
      </item>

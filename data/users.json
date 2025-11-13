@@ -7,6 +7,46 @@
       "iterations": 130000,
       "role": "user",
       "active": true
+    },
+    {
+      "username": "beto",
+      "salt": "HlA6lmnFBbaPFHq2PdFXog==",
+      "hash": "3Uh9W/o44VuBHaboK3lO1opPZ/IeaFa/1pzEU/VizJQ=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
+    },
+    {
+      "username": "Ghost_Mepriari",
+      "salt": "nzmxLP7D6KTHpnH7vXsDXg==",
+      "hash": "GhyCrzAuaug4pNQOM8ZZpALa2ePmefkSzPL6ZiVlsfY=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
+    },
+    {
+      "username": "Ariel",
+      "salt": "d1bouRdDpcUJOy6+zMyZfg==",
+      "hash": "hyxcfUKMoqOrnqZbGVBojwbqGPTJ+6jKiACcM+rijwM=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
+    },
+    {
+      "username": "Brayan",
+      "salt": "1TEWCH7yN009xw8jq6LlfA==",
+      "hash": "LrlS1FMbXsur16v5Vx9sU+/McG69gVWOPzgatbs6ktY=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
+    },
+    {
+      "username": "BMM",
+      "salt": "JGTCSscmQEZDiqOqZ6nntw==",
+      "hash": "e6VC1lHlXEwyEXCeySnsF9TTWzCoUFzQsZk3Z2aq11U=",
+      "iterations": 130000,
+      "role": "user",
+      "active": true
     }
   ]
 }

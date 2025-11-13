@@ -1,15 +1,20 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QPushButton, QLabel, QTableWidget, QTableWidgetItem,
-                              QHeaderView)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QColor
+                              QHeaderView, QMessageBox)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QColor
+from pathlib import Path
+import json
 
 
 class HallOfFameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("🏆 Hall of Fame")
-        self.setMinimumSize(700, 500)
+        self.setWindowTitle("🏆 SALÓN DE LA FAMA")
+        self.setMinimumSize(600, 500)
+        
+        # Ruta al archivo de ganadores
+        self.winners_file = Path(__file__).parent.parent / "data" / "winners.json"
         
         # Widget central
         central_widget = QWidget()
@@ -21,7 +26,7 @@ class HallOfFameWindow(QMainWindow):
         main_layout.setContentsMargins(30, 30, 30, 30)
         
         # Título
-        title = QLabel("🏆 HALL OF FAME 🏆")
+        title = QLabel("🏆 SALÓN DE LA FAMA 🏆")
         title_font = QFont()
         title_font.setPointSize(24)
         title_font.setBold(True)
@@ -31,15 +36,15 @@ class HallOfFameWindow(QMainWindow):
         main_layout.addWidget(title)
         
         # Subtítulo
-        subtitle = QLabel("Los mejores jugadores de todos los tiempos")
+        subtitle = QLabel("Jugadores que completaron el juego")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet("font-size: 14px; color: #666; margin-bottom: 10px;")
         main_layout.addWidget(subtitle)
         
         # Tabla de clasificación
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Ranking", "Nombre", "Puntaje", "Oleadas"])
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["Posición", "Nombre del Jugador"])
         
         # Estilo de la tabla
         self.table.setStyleSheet("""
@@ -50,15 +55,15 @@ class HallOfFameWindow(QMainWindow):
                 gridline-color: #e0e0e0;
             }
             QTableWidget::item {
-                padding: 8px;
+                padding: 12px;
             }
             QHeaderView::section {
                 background-color: #5b9bd5;
                 color: white;
-                padding: 10px;
+                padding: 12px;
                 border: none;
                 font-weight: bold;
-                font-size: 13px;
+                font-size: 14px;
             }
         """)
         
@@ -66,8 +71,6 @@ class HallOfFameWindow(QMainWindow):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         
         # Deshabilitar edición
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -75,8 +78,8 @@ class HallOfFameWindow(QMainWindow):
         # Selección por fila completa
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         
-        # Cargar datos de ejemplo
-        self.load_sample_data()
+        # Cargar datos
+        self.load_winners()
         
         main_layout.addWidget(self.table)
         
@@ -142,75 +145,150 @@ class HallOfFameWindow(QMainWindow):
         
         main_layout.addLayout(buttons_layout)
     
-    def load_sample_data(self):
-        """Carga datos de ejemplo en la tabla"""
-        # Datos de ejemplo (más adelante puedes cargarlos desde un archivo o base de datos)
-        sample_data = [
-            ("Juan Pérez", 15000, 25),
-            ("María García", 12500, 22),
-            ("Carlos López", 11000, 20),
-            ("Ana Martínez", 9800, 18),
-            ("Luis Rodríguez", 8500, 16),
-            ("Sofia Fernández", 7200, 14),
-            ("Diego Sánchez", 6800, 13),
-            ("Laura Torres", 5900, 11),
-            ("Miguel Ramírez", 5200, 10),
-            ("Elena Castro", 4500, 9),
+    def get_fake_winners(self):
+        """Devuelve una lista de ganadores falsos para pruebas"""
+        return [
+            "DragonSlayer",
+            "MasterChief",
+            "ShadowNinja",
+            "PhoenixRider",
+            "IceQueen",
+            "ThunderStrike",
+            "CrimsonBlade",
+            "SilverFox",
+            "GoldenEagle",
+            "DarkKnight",
+            "StarGazer",
+            "MoonWalker",
+            "FireStorm",
+            "OceanWave",
+            "MountainKing"
         ]
+    
+    def load_winners_data(self):
+        """Carga los ganadores desde el archivo JSON o devuelve datos falsos"""
+        if self.winners_file.exists():
+            try:
+                with open(self.winners_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    winners = data.get('winners', [])
+                    # Si está vacío, usar datos falsos
+                    if not winners:
+                        return self.get_fake_winners()
+                    return winners
+            except json.JSONDecodeError:
+                print("⚠️ Error al leer archivo de ganadores, usando datos falsos")
+                return self.get_fake_winners()
+        else:
+            # Si no existe el archivo, usar datos falsos
+            print("ℹ️ Archivo no encontrado, usando datos de ejemplo")
+            return self.get_fake_winners()
+    
+    def save_winners_data(self, winners):
+        """Guarda los ganadores en el archivo JSON"""
+        self.winners_file.parent.mkdir(parents=True, exist_ok=True)
         
-        self.table.setRowCount(len(sample_data))
+        with open(self.winners_file, 'w', encoding='utf-8') as f:
+            json.dump({"winners": winners}, f, indent=2, ensure_ascii=False)
+    
+    def load_winners(self):
+        """Carga los ganadores en la tabla"""
+        winners = self.load_winners_data()
         
-        for row, (name, score, waves) in enumerate(sample_data):
-            # Ranking con emoji de medalla para los primeros 3
-            ranking_item = QTableWidgetItem()
+        if not winners:
+            self.table.setRowCount(1)
+            empty_item = QTableWidgetItem("No hay ganadores aún")
+            empty_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_item.setFont(QFont("Arial", 12))
+            empty_item.setForeground(QColor(150, 150, 150))
+            self.table.setSpan(0, 0, 1, 2)
+            self.table.setItem(0, 0, empty_item)
+            self.table.setRowHeight(0, 60)
+            return
+        
+        self.table.setRowCount(len(winners))
+        
+        for row, name in enumerate(winners):
+            # Posición con emoji de medalla para los primeros 3
+            position_item = QTableWidgetItem()
             if row == 0:
-                ranking_item.setText(f"🥇 {row + 1}")
-                ranking_item.setBackground(QColor(255, 215, 0, 50))  # Dorado
+                position_item.setText(f"🥇 1º Lugar")
+                position_item.setBackground(QColor(255, 215, 0, 80))  # Dorado
             elif row == 1:
-                ranking_item.setText(f"🥈 {row + 1}")
-                ranking_item.setBackground(QColor(192, 192, 192, 50))  # Plateado
+                position_item.setText(f"🥈 2º Lugar")
+                position_item.setBackground(QColor(192, 192, 192, 80))  # Plateado
             elif row == 2:
-                ranking_item.setText(f"🥉 {row + 1}")
-                ranking_item.setBackground(QColor(205, 127, 50, 50))  # Bronce
+                position_item.setText(f"🥉 3º Lugar")
+                position_item.setBackground(QColor(205, 127, 50, 80))  # Bronce
             else:
-                ranking_item.setText(f"   {row + 1}")
+                position_item.setText(f"   {row + 1}º")
             
-            ranking_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            ranking_item.setFont(QFont("Arial", 11, QFont.Weight.Bold))
+            position_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            position_item.setFont(QFont("Arial", 12, QFont.Weight.Bold))
             
-            # Nombre
+            # Nombre del jugador
             name_item = QTableWidgetItem(name)
-            name_item.setFont(QFont("Arial", 10))
+            name_item.setFont(QFont("Arial", 12))
             
-            # Puntaje
-            score_item = QTableWidgetItem(f"{score:,}")
-            score_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            score_item.setFont(QFont("Arial", 10, QFont.Weight.Bold))
-            score_item.setForeground(QColor(46, 125, 50))  # Verde oscuro
-            
-            # Oleadas
-            waves_item = QTableWidgetItem(str(waves))
-            waves_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            waves_item.setFont(QFont("Arial", 10))
+            # Resaltar el podio (primeros 3)
+            if row < 3:
+                name_item.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+                if row == 0:
+                    name_item.setBackground(QColor(255, 215, 0, 80))
+                elif row == 1:
+                    name_item.setBackground(QColor(192, 192, 192, 80))
+                elif row == 2:
+                    name_item.setBackground(QColor(205, 127, 50, 80))
             
             # Agregar items a la tabla
-            self.table.setItem(row, 0, ranking_item)
+            self.table.setItem(row, 0, position_item)
             self.table.setItem(row, 1, name_item)
-            self.table.setItem(row, 2, score_item)
-            self.table.setItem(row, 3, waves_item)
             
             # Altura de fila
-            self.table.setRowHeight(row, 45)
+            self.table.setRowHeight(row, 50)
     
     def refresh_data(self):
         """Actualiza los datos de la tabla"""
         print("🔄 Actualizando Hall of Fame...")
-        # Aquí puedes implementar la lógica para recargar datos desde un archivo o base de datos
-        self.load_sample_data()
+        self.load_winners()
         print("✅ Hall of Fame actualizado")
     
     def clear_history(self):
-        """Limpia el historial de puntuaciones"""
-        print("🗑️ Limpiando historial...")
-        self.table.setRowCount(0)
-        print("✅ Historial limpiado")
+        """Limpia el historial de ganadores"""
+        reply = QMessageBox.question(
+            self,
+            "Confirmar",
+            "¿Estás seguro de que quieres eliminar todos los ganadores del Salón de la Fama?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            print("🗑️ Limpiando historial...")
+            self.save_winners_data([])
+            self.load_winners()
+            print("✅ Historial limpiado")
+            QMessageBox.information(
+                self,
+                "Historial Limpiado",
+                "El Salón de la Fama ha sido limpiado exitosamente."
+            )
+    
+    def add_winner(self, username):
+        """Agrega un ganador al salón de la fama"""
+        winners = self.load_winners_data()
+        
+        # Si tenemos datos falsos, limpiar primero
+        fake_winners = self.get_fake_winners()
+        if winners == fake_winners:
+            winners = []
+        
+        # Verificar si ya está en la lista
+        if username not in winners:
+            winners.append(username)
+            self.save_winners_data(winners)
+            print(f"🏆 {username} agregado al Salón de la Fama!")
+            return True
+        else:
+            print(f"ℹ️ {username} ya está en el Salón de la Fama")
+            return False

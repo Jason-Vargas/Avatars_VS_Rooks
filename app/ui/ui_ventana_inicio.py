@@ -30,7 +30,7 @@ class Ui_AvatarsVSRooks(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayoutWidget = QWidget(self.centralwidget)
         self.verticalLayoutWidget.setObjectName(u"verticalLayoutWidget")
-        self.verticalLayoutWidget.setGeometry(QRect(200, 400, 251, 102))
+        self.verticalLayoutWidget.setGeometry(QRect(290, 360, 251, 132))
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -65,9 +65,14 @@ class Ui_AvatarsVSRooks(object):
 
         self.verticalLayout.addWidget(self.btnEntrar)
 
+        self.btn_registrarse = QPushButton(self.verticalLayoutWidget)
+        self.btn_registrarse.setObjectName(u"btn_registrarse")
+
+        self.verticalLayout.addWidget(self.btn_registrarse)
+
         self.fondo = QLabel(self.centralwidget)
         self.fondo.setObjectName(u"fondo")
-        self.fondo.setGeometry(QRect(-2, -5, 810, 610))
+        self.fondo.setGeometry(QRect(-2, -5, 811, 610))
         self.fondo.setPixmap(QPixmap(u"../images/fondo.jpg"))
         self.fondo.setScaledContents(True)
         AvatarsVSRooks.setCentralWidget(self.centralwidget)
@@ -95,6 +100,7 @@ class Ui_AvatarsVSRooks(object):
         self.txtPassword.setText("")
         self.txtPassword.setPlaceholderText(QCoreApplication.translate("AvatarsVSRooks", u"Contrase\u00f1a", None))
         self.btnEntrar.setText(QCoreApplication.translate("AvatarsVSRooks", u"Entrar", None))
+        self.btn_registrarse.setText(QCoreApplication.translate("AvatarsVSRooks", u"Registrarse", None))
         self.fondo.setText("")
     # retranslateUi
 
