@@ -7,14 +7,20 @@ class Tablero(QWidget):
         super().__init__()
         self.filas = 9
         self.columnas = 5
+        self.sel_fila = 0
+        self.sel_columna = 0
         self.celdas = []
         self.init_ui()
+        self.celdas_rojas = []
+        self.fila_roja(0)
+        self.resaltar_celda(0, 0)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
     
     def init_ui(self):
         # Configurar ventana principal
         self.setWindowTitle("Matriz Postapocalíptica")
         self.setStyleSheet("background-color: #1a1a1a;")
-        
+    
         # Layout principal
         layout_principal = QVBoxLayout()
         
@@ -54,11 +60,6 @@ class Tablero(QWidget):
                         border-radius: 3px;
                         padding: 5px;
                     }
-                    QLabel:hover {
-                        background-color: #2a3a2a;
-                        color: #9acd32;
-                        border: 2px solid #4a5a2a;
-                    }
                 """)
                 
                 grid_layout.addWidget(celda, fila, col)
@@ -71,6 +72,62 @@ class Tablero(QWidget):
         
         self.setLayout(layout_principal)
     
+    def resaltar_celda(self, fila, col):
+        for f in range(self.filas):
+            for c in range(self.columnas):
+                if (f, c) in self.celdas_rojas:
+                    self.celdas[f][c].setStyleSheet("""
+                        background-color: #940901;
+                        color: #630601;
+                        border: 2px inset #630601;
+                        border-radius: 3px;
+                        padding: 5px;
+                    """)
+                    continue
+                self.celdas[f][c].setStyleSheet("""
+                    background-color: #1c1c1c;
+                    color: #6b8e23;
+                    border: 2px inset #3d3d3d;
+                    border-radius: 3px;
+                    padding: 5px;
+                """)
+        # Celda selecionada
+        self.celdas[fila][col].setStyleSheet("""
+            background-color: #3a2a2a;
+            color: #ffcc00;
+            border: 3px solid #ffcc00;
+            border-radius: 3px;
+            padding: 5px;
+        """)
+    def fila_roja(self, col):
+        self.celdas_rojas = [(0, c) for c in range(self.columnas)]
+        for c in range(self.columnas):
+            self.celdas[0][c].setStyleSheet("""
+                background-color: #940901;
+                color: #630601;
+                border: 2px inset #630601;
+                border-radius: 3px;
+                padding: 5px;
+            """)
+        
+    def keyPressEvent(self, event):
+        tecla = event.key()
+
+        if tecla == Qt.Key.Key_Up:
+            self.sel_fila = max(0, self.sel_fila - 1)
+        elif tecla == Qt.Key.Key_Down:
+            self.sel_fila = min(self.filas - 1, self.sel_fila + 1)
+        elif tecla == Qt.Key.Key_Left:
+            self.sel_columna = max(0, self.sel_columna - 1)
+        elif tecla == Qt.Key.Key_Right:
+            self.sel_columna = min(self.columnas - 1, self.sel_columna + 1)
+        elif event.key() == Qt.Key.Key_Z:
+            print(f"Celda seleccionada: ({self.sel_fila}, {self.sel_columna})")
+            return
+        else:
+            return
+        self.resaltar_celda(self.sel_fila, self.sel_columna)
+
     def actualizar_celda(self, fila, col, texto):
         """Actualizar el contenido de una celda específica"""
         if 0 <= fila < self.filas and 0 <= col < self.columnas:
