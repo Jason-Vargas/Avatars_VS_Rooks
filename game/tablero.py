@@ -15,6 +15,10 @@ class Tablero(QWidget):
         self.fila_roja(0)
         self.resaltar_celda(0, 0)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.colocar_rook_callback = None
+        self.rook_seleccionada = 1  # valor por defecto
+
+
     
     def init_ui(self):
         # Configurar ventana principal
@@ -121,12 +125,34 @@ class Tablero(QWidget):
             self.sel_columna = max(0, self.sel_columna - 1)
         elif tecla == Qt.Key.Key_Right:
             self.sel_columna = min(self.columnas - 1, self.sel_columna + 1)
+        elif tecla == Qt.Key.Key_1:
+            self.rook_seleccionada = 1
+            print("Seleccionado: SandRook")
+            return
+        elif tecla == Qt.Key.Key_2:
+            self.rook_seleccionada = 2
+            print("Seleccionado: RockRook")
+            return
+        elif tecla == Qt.Key.Key_3:
+            self.rook_seleccionada = 3
+            print("Seleccionado: FireRook")
+            return
+        elif tecla == Qt.Key.Key_4:
+            self.rook_seleccionada = 4
+            print("Seleccionado: WaterRook")
+            return
+        elif tecla == Qt.Key.Key_X:  # ← NUEVO
+            self.colocar_rook_en_seleccion()
+            return
         elif event.key() == Qt.Key.Key_Z:
             print(f"Celda seleccionada: ({self.sel_fila}, {self.sel_columna})")
             return
         else:
             return
+
         self.resaltar_celda(self.sel_fila, self.sel_columna)
+
+        
 
     def actualizar_celda(self, fila, col, texto):
         """Actualizar el contenido de una celda específica"""
@@ -138,3 +164,7 @@ class Tablero(QWidget):
         if 0 <= fila < self.filas and 0 <= col < self.columnas:
             return self.celdas[fila][col]
         return None
+    def colocar_rook_en_seleccion(self):
+        if self.colocar_rook_callback:
+            self.colocar_rook_callback(self.sel_fila, self.sel_columna, self.rook_seleccionada)
+
