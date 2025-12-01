@@ -147,6 +147,18 @@ class Tablero(QWidget):
         elif event.key() == Qt.Key.Key_Z:
             print(f"Celda seleccionada: ({self.sel_fila}, {self.sel_columna})")
             return
+        elif tecla == Qt.Key.Key_Escape:
+            # Guardar la partida y salir
+            if hasattr(self, "game_controller") and self.game_controller is not None:
+                print("Guardar y salir (tecla ESC)...")
+                # Llamamos al método del controlador
+                self.game_controller.guardar_partida()
+            else:
+                print("No hay game_controller vinculado; no se puede guardar.")
+            return
+        elif event.key() == Qt.Key.Key_Z:
+            print(f"Celda seleccionada: ({self.sel_fila}, {self.sel_columna})")
+            return
         else:
             return
 
@@ -167,4 +179,9 @@ class Tablero(QWidget):
     def colocar_rook_en_seleccion(self):
         if self.colocar_rook_callback:
             self.colocar_rook_callback(self.sel_fila, self.sel_columna, self.rook_seleccionada)
+
+    def limpiar_tablero(self):
+        for f in range(self.filas):
+            for c in range(self.columnas):
+                self.actualizar_celda(f, c, f"[{f},{c}]")
 
