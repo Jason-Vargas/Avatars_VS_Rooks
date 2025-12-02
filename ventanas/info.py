@@ -263,16 +263,12 @@ Para consultas sobre licencias comerciales, contactar a: license@towerdefense.co
         
         # Tecnologías
         technologies = [
-            ("🐍 Python 3.11", "Lenguaje de programación principal"),
+            ("🐍 Python", "Lenguaje de programación principal"),
             ("🖼️ PyQt6", "Framework para interfaz gráfica de usuario"),
             ("🎨 Qt Designer", "Diseño de interfaces visuales"),
-            ("🎮 Pygame (Opcional)", "Motor de juego y gestión de sprites"),
-            ("📊 NumPy", "Cálculos matemáticos y algoritmos"),
-            ("🔊 PyAudio", "Gestión de audio y efectos de sonido"),
-            ("💾 SQLite", "Base de datos para guardar puntuaciones"),
+            ("🎮 Pygame", "Gestión de música"),
             ("📝 JSON", "Almacenamiento de configuración y datos"),
-            ("🎯 Algoritmos A*", "Pathfinding para enemigos"),
-            ("🏗️ Arquitectura MVC", "Patrón de diseño del código"),
+        
         ]
         
         for tech, description in technologies:
