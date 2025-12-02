@@ -10,6 +10,8 @@ class GameController:
         self.tablero.game_controller = self    
         self.avatars = []
         self.rooks = []
+        self.monedas = []
+        self.economia = 0
         self.game_over = False
 
         # Timer del juego (1 tick por segundo)
@@ -19,9 +21,15 @@ class GameController:
         self.spawn_timer = QTimer()
         self.spawn_timer.timeout.connect(self.spawn_avatar)
         self.spawn_timer.start(10000)  # cada 10 segundos
+        self.coin_timer = QTimer()
+        self.coin_timer.timeout.connect(self.spawn_coin)
+        self.coin_timer.start(5000)
 
         # Persistencia
         self.cargar_partida_si_corresponde()
+
+        # Panel lateral
+        self.actualizar_panel()
 
 
     # --------------------------------------------
@@ -85,6 +93,15 @@ class GameController:
                         # Rook ataca
                         if rook.puede_atacar(1):
                             avatar.recibir_daño(rook.ataque)
+                            # 🔥 Si el avatar muere → sumar economía
+                            if not avatar.esta_vivo():
+                                self.economia += 75
+                                print(f"Avatar derrotado. Economía = {self.economia}")
+                                self.actualizar_panel()
+
+                                # quitar del tablero y de la lista
+                                self.avatars.remove(avatar)
+                                break    # salir del loop de rooks para evitar errores
 
     # --------------------------------------------
     # ELIMINAR ENTIDADES MUERTAS
@@ -109,6 +126,9 @@ class GameController:
         # Mostrar rooks
         for rook in self.rooks:
             self.tablero.actualizar_celda(rook.fila, rook.col, rook.simbolo)
+        for moneda in self.monedas:
+            self.tablero.actualizar_celda(moneda.fila, moneda.col, moneda.simbolo)
+
     def colocar_rook(self, fila, col, tipo):
         # Verificar colisiones
         for r in self.rooks:
@@ -119,6 +139,11 @@ class GameController:
         for a in self.avatars:
             if a.fila == fila and a.col == col:
                 print("No se puede poner una rook encima de un avatar.")
+                return
+
+        for m in self.monedas:
+            if m.fila == fila and m.col == col:
+                print("No se puede poner una rook encima de una moneda.")
                 return
 
         # Importar clases
@@ -136,10 +161,19 @@ class GameController:
         else:
             print("Tipo inválido")
             return
+        
+        if self.economia < nueva.costo:
+            print(f"No tienes suficiente economía. Necesitas {nueva.costo}, tienes {self.economia}.")
+            return
+
+        self.economia -= nueva.costo
+        print(f"Rook colocado. Economía restante: {self.economia}")
+        self.actualizar_panel()
 
         # Añadir al juego
         self.rooks.append(nueva)
         self.tablero.actualizar_celda(fila, col, nueva.simbolo)
+
     def spawn_avatar(self):
         import random
         from avatars import Flechador, Escudero, Leñador, Canibal
@@ -261,6 +295,7 @@ class GameController:
             print("WARN: refrescar_tablero falló:", e)
 
         print("DEBUG: carga completada. Avatars:", len(self.avatars), "Rooks:", len(self.rooks))
+        self.actualizar_panel() 
 
     def guardar_partida(self, archivo="savegame.json"):
         print("DEBUG: iniciar guardado...")
@@ -315,3 +350,68 @@ class GameController:
         print("DEBUG: sys.exit()")
         import sys
         sys.exit()
+
+    # monedas
+    def spawn_coin(self):
+        import random
+        from moneda import Moneda
+
+        # Obtener posiciones libres
+        libres = []
+        for f in range(self.tablero.filas):
+            for c in range(self.tablero.columnas):
+                # No puede existir avatar, rook ni moneda en esa celda
+                ocupado_avatar = any(a.fila == f and a.col == c for a in self.avatars)
+                ocupado_rook = any(r.fila == f and r.col == c for r in self.rooks)
+                ocupado_moneda = any(m.fila == f and m.col == c for m in self.monedas)
+
+                if not (ocupado_avatar or ocupado_rook or ocupado_moneda):
+                    libres.append((f, c))
+
+        if not libres:
+            print("No hay espacio para monedas.")
+            return
+
+        fila, col = random.choice(libres)
+        nueva = Moneda(fila, col)
+        self.monedas.append(nueva)
+
+        # Pintar en tablero
+        self.tablero.actualizar_celda(fila, col, nueva.simbolo)
+        print(f"Spawn MONEDA en ({fila}, {col}) valor={nueva.valor}")
+    def recoger_moneda_en(self, fila, col):
+        for m in self.monedas:
+            if m.fila == fila and m.col == col:
+                print(f"Moneda recogida en ({fila},{col}) +{m.valor}")
+
+                # Sumar a economía
+                self.economia += m.valor
+                print(f"Economía total: {self.economia}")
+                self.actualizar_panel()
+
+                # Borrar visualmente
+                self.tablero.actualizar_celda(fila, col, f"[{fila},{col}]")
+
+                # Quitar de la lista
+                self.monedas.remove(m)
+                return  # Solo puede haber una moneda en esa celda
+
+        print("No hay moneda en esta celda.")
+
+    # Panel lateral
+    def actualizar_panel(self):
+        # Definir nombres y costos por tipo de rook
+        rook_info = {
+            1: ("SandRook", 50),
+            2: ("RockRook", 80),
+            3: ("FireRook", 120),
+            4: ("WaterRook", 150)
+        }
+
+        nombre, costo = rook_info.get(self.tablero.rook_seleccionada, ("-", 0))
+
+        self.tablero.actualizar_panel(
+            rook_name=nombre,
+            costo=costo,
+            economia=self.economia
+        )
