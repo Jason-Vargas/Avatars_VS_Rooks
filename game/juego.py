@@ -5,6 +5,8 @@ from controlador import GameController
 from avatars import Flechador, Escudero, Leñador, Canibal
 from rooks import SandRook, RockRook, FireRook, WaterRook
 
+
+
 def main():
     app = QApplication(sys.argv)
 
@@ -12,6 +14,8 @@ def main():
     tablero.show()
 
     game = GameController(tablero)
+    
+    tablero.iniciar_cronometro()
 
 
 

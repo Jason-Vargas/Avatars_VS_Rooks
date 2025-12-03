@@ -3,6 +3,8 @@ import json
 import os
 from niveles_progresivos import NivelManager
 
+
+
 class GameController:
     def __init__(self, tablero):
         self.tablero = tablero
@@ -13,6 +15,8 @@ class GameController:
         self.monedas = []
         self.economia = 0
         self.game_over = False
+
+        
 
         # Timer del juego (1 tick por segundo)
         self.timer = QTimer()
@@ -75,6 +79,8 @@ class GameController:
                 self.game_over = True
                 self.tablero.actualizar_celda(0, 0, "💀GAME OVER💀")
                 self.timer.stop()
+                # ✅ Pausar cronómetro al perder
+                self.tablero.pausar_cronometro()
                 return
 
             # Movimiento si cooldown lo permite
@@ -197,6 +203,45 @@ class GameController:
     def spawn_avatar(self):
         # Manejado por NivelManager
         pass
+
+    # ✅ NUEVA FUNCIÓN: Mostrar victoria y guardar tiempo
+    def mostrar_victoria(self):
+        """Muestra pantalla de victoria y guarda el tiempo en MongoDB"""
+        # ✅ Pausar el cronómetro
+        self.tablero.pausar_cronometro()
+        
+        # ✅ Obtener tiempo
+        tiempo_segundos = self.tablero.obtener_tiempo_cronometro()
+        tiempo_formateado = self.tablero.obtener_tiempo_formateado()
+        
+        # ✅ Guardar en MongoDB
+        if self.database:
+            self.database.guardar_victoria(tiempo_segundos, tiempo_formateado)
+            
+            # Mostrar estadísticas
+            total = self.database.obtener_total_victorias()
+            record = self.database.obtener_record_personal()
+            
+            print(f"\n📊 ESTADÍSTICAS:")
+            print(f"   Total victorias: {total}")
+            if record:
+                print(f"   Mejor tiempo: {record['tiempo_formateado']} ({record['fecha']})")
+        
+        # Mostrar pantalla de victoria
+        for f in range(self.tablero.filas):
+            for c in range(self.tablero.columnas):
+                self.tablero.actualizar_celda(f, c, "🏆" if (f + c) % 2 == 0 else "👑")
+        
+        print("\n🎊 ¡VICTORIA TOTAL! 🎊")
+        print(f"⏱️ Tiempo: {tiempo_formateado}")
+        
+        # ✅ Mostrar top 5
+        if self.database:
+            mejores = self.database.obtener_mejores_tiempos(5)
+            if mejores:
+                print("\n🏆 TOP 5 MEJORES TIEMPOS:")
+                for i, (tiempo, fecha, _) in enumerate(mejores, 1):
+                    print(f"  {i}. {tiempo} - {fecha}")
 
     # Persistencia
     def cargar_partida_si_corresponde(self):
@@ -373,6 +418,10 @@ class GameController:
             with open(meta_file, "w") as f:
                 json.dump(meta, f)
 
+        # ✅ Cerrar conexión con MongoDB
+        if self.database:
+            self.database.cerrar_conexion()
+
         # Cerrar la aplicación (PySide)
         print("DEBUG: sys.exit()")
         import sys
@@ -406,6 +455,7 @@ class GameController:
         # Pintar en tablero
         self.tablero.actualizar_celda(fila, col, nueva.simbolo)
         print(f"Spawn MONEDA en ({fila}, {col}) valor={nueva.valor}")
+        
     def recoger_moneda_en(self, fila, col):
         for m in self.monedas:
             if m.fila == fila and m.col == col:
