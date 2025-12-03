@@ -429,10 +429,10 @@ class GameController:
     def actualizar_panel(self):
         # Definir nombres y costos por tipo de rook
         rook_info = {
-            1: ("SandRook", 50),
-            2: ("RockRook", 80),
-            3: ("FireRook", 120),
-            4: ("WaterRook", 150)
+            1: ("Torre de Arena", 50),
+            2: ("Torre de Piedra", 80),
+            3: ("Torre de Fuego", 120),
+            4: ("Torre de Agua", 150)
         }
 
         nombre, costo = rook_info.get(self.tablero.rook_seleccionada, ("-", 0))
