@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
+from cronometro import Cronometro
 
 
 class Tablero(QMainWindow):
@@ -18,10 +19,18 @@ class Tablero(QMainWindow):
         # ✅ Inicializar game_controller
         self.game_controller = None
         
+        # ✅ Inicializar cronómetro
+        self.cronometro = Cronometro()
+        
         self.init_ui()
         self.fila_roja(0)
         self.resaltar_celda(0, 0)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        
+        # ✅ Timer para actualizar el cronómetro en la UI
+        self.timer_cronometro = QTimer()
+        self.timer_cronometro.timeout.connect(self.actualizar_display_cronometro)
+        self.timer_cronometro.start(50)  # Actualiza cada 50ms
     
     def init_ui(self):
         # Configurar ventana principal
@@ -31,7 +40,7 @@ class Tablero(QMainWindow):
         # Widget central
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-    
+
         # Layout principal
         layout_principal = QHBoxLayout(central_widget)
         layout_centro = QVBoxLayout()
@@ -90,6 +99,12 @@ class Tablero(QMainWindow):
         info_title.setStyleSheet("color: #CCCCCC; margin-bottom: 15px;")
         info_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # ✅ CREAR el label del cronómetro ANTES de usarlo
+        self.lbl_cronometro = QLabel("⏱️ 00:00.000")
+        self.lbl_cronometro.setFont(QFont("Courier", 13, QFont.Weight.Bold))
+        self.lbl_cronometro.setStyleSheet("color: #00FF00; padding: 8px; background-color: #0a0a0a; border: 1px solid #333;")
+        self.lbl_cronometro.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.lbl_tipo = QLabel("Rook: -")
         self.lbl_costo = QLabel("Costo: -")
         self.lbl_economia = QLabel("Economía: 0")
@@ -108,7 +123,9 @@ class Tablero(QMainWindow):
         self.lbl_oleada.setStyleSheet("color: #FFFFFF; padding: 4px;")
         self.lbl_oleada.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Añadir widgets al panel lateral
         panel_lateral.addWidget(info_title)
+        panel_lateral.addWidget(self.lbl_cronometro)  # ✅ Ahora sí existe
         panel_lateral.addWidget(self.lbl_tipo)
         panel_lateral.addWidget(self.lbl_costo)
         panel_lateral.addWidget(self.lbl_economia)
@@ -119,6 +136,26 @@ class Tablero(QMainWindow):
         # Añadir layouts
         layout_principal.addLayout(layout_centro, stretch=3)
         layout_principal.addLayout(panel_lateral, stretch=1)
+        
+        
+        # ✅ Métodos para controlar el cronómetro
+    def iniciar_cronometro(self):
+        """Inicia el cronómetro cuando comienza el juego."""
+        self.cronometro.iniciar()
+    
+    def pausar_cronometro(self):
+        """Pausa el cronómetro."""
+        self.cronometro.pausar()
+    
+    def reiniciar_cronometro(self):
+        """Reinicia el cronómetro."""
+        self.cronometro.reiniciar()
+        self.lbl_cronometro.setText("⏱️ 00:00.000")
+    
+    def actualizar_display_cronometro(self):
+        """Actualiza el display del cronómetro en la UI."""
+        tiempo_formateado = self.cronometro.tiempo_formateado()
+        self.lbl_cronometro.setText(f"⏱️ {tiempo_formateado}")
     
     def resaltar_celda(self, fila, col):
         """Redibujar todas las celdas según el estado actual del juego"""
@@ -323,3 +360,5 @@ class Tablero(QMainWindow):
                 self.actualizar_celda(f, c, "🏆" if (f + c) % 2 == 0 else "👑")
         
         print("🎊 ¡VICTORIA TOTAL! 🎊")
+    
+    
