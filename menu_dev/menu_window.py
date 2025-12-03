@@ -64,33 +64,50 @@ class MenuWindow(QMainWindow):
         self.set_background()
     
     def start_game(self):
-        """Inicia el juego importando el Tablero desde juego.py"""
+        """Ejecuta juego.py como un proceso independiente"""
         print("🎯 Iniciando juego…")
         
         try:
-            # Importar la clase Tablero
-            from game.tablero import Tablero
+            import subprocess
+            import sys
+            from pathlib import Path
             
-            print("✅ Tablero importado correctamente")
+            # Ruta al archivo juego.py
+            juego_path = Path(__file__).parent.parent / "game" / "juego.py"
             
-            # Crear y mostrar el tablero
-            self.game_window = Tablero()
-            print("✅ Tablero creado")
+            print(f"📂 Ejecutando: {juego_path}")
             
-            # Aquí puedes inicializar tu lógica del juego
-            # Por ejemplo: colocar personajes, enemigos, etc.
-            self.game_window.actualizar_celda(0, 0, "🎮")
+            # Verificar que el archivo existe
+            if not juego_path.exists():
+                raise FileNotFoundError(f"No se encontró juego.py en {juego_path}")
             
-            self.game_window.show()
-            print("✅ Tablero mostrado")
+            # Cambiar al directorio game/ antes de ejecutar
+            game_dir = juego_path.parent
+            
+            # Ejecutar juego.py desde su propio directorio
+            subprocess.Popen(
+                [sys.executable, "juego.py"],
+                cwd=str(game_dir)  # ← Esto ejecuta desde el directorio game/
+            )
+            
+            print("✅ Juego ejecutado correctamente")
             
             # Cerrar el menú (opcional)
             self.close()
             
         except Exception as e:
             print(f"❌ Error al iniciar el juego: {e}")
-            from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Error", f"No se pudo iniciar el juego:\n{e}")
+            import traceback
+            traceback.print_exc()
+            
+            from PySide6.QtWidgets import QMessageBox
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText("No se pudo iniciar el juego")
+            msg.setInformativeText(str(e))
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
     
     def open_options(self):
         """Abre la ventana de opciones"""
