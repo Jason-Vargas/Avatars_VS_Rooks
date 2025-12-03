@@ -1,0 +1,159 @@
+import time
+import board  # type: ignore
+import digitalio  # type: ignore
+import analogio  # type: ignore
+import usb_hid  # type: ignore
+
+# type: ignore
+from adafruit_hid.keyboard import Keyboard  # type: ignore
+from adafruit_hid.keycode import Keycode    # type: ignore
+
+
+
+# ============================
+#   CONFIGURACIÓN DE HARDWARE
+# ============================
+
+# Botones (PULL-DOWN)
+btn_place = digitalio.DigitalInOut(board.GP2)
+btn_coin = digitalio.DigitalInOut(board.GP3)
+btn_pause = digitalio.DigitalInOut(board.GP4)
+btn_change = digitalio.DigitalInOut(board.GP5)
+
+for b in (btn_place, btn_coin, btn_pause, btn_change):
+    b.direction = digitalio.Direction.INPUT
+    b.pull = digitalio.Pull.DOWN
+
+# Joystick (ADC)
+joy_x = analogio.AnalogIn(board.A1)   # GPIO27
+joy_y = analogio.AnalogIn(board.A0)   # GPIO26
+
+# LEDs
+led_avatar = digitalio.DigitalInOut(board.GP12)
+led_level = digitalio.DigitalInOut(board.GP13)
+
+led_avatar.direction = digitalio.Direction.OUTPUT
+led_level.direction = digitalio.Direction.OUTPUT
+
+# HID Keyboard
+kbd = Keyboard(usb_hid.devices)
+
+# ============================
+#   CONSTANTES
+# ============================
+
+DEADZONE = 12000        # Zona muerta del joystick
+REPEAT_DELAY = 0.20     # Tiempo entre repeticiones de movimiento
+
+last_move_time = 0
+
+rook_selected = 1  # 1-4
+
+
+# ============================
+#   FUNCIÓN: Leer joystick
+# ============================
+
+def read_joy_axis(pin):
+    """Convierte el ADC 0-65535 en -32768 a +32768"""
+    return pin.value - 32768
+
+
+def send_key(key):
+    """Envía una tecla por HID (tap)"""
+    try:
+        kbd.press(key)
+        time.sleep(0.02)
+        kbd.release(key)
+    except:
+        pass
+
+
+# ============================
+#   LOOP PRINCIPAL
+# ============================
+
+print("🎮 Control HID iniciado")
+
+while True:
+    now = time.time()
+
+    # -------------------------
+    #   LECTURA DEL JOYSTICK
+    # -------------------------
+
+    x = read_joy_axis(joy_x)
+    y = read_joy_axis(joy_y)
+
+    moved = False
+
+    if abs(x) < DEADZONE:
+        x = 0
+    if abs(y) < DEADZONE:
+        y = 0
+
+    if now - last_move_time >= REPEAT_DELAY:
+        if y > DEADZONE:        # Arriba
+            send_key(Keycode.UP_ARROW)
+            moved = True
+        
+        elif y < -DEADZONE:     # Abajo
+            send_key(Keycode.DOWN_ARROW)
+            moved = True
+        
+        if x > DEADZONE:        # Derecha
+            send_key(Keycode.RIGHT_ARROW)
+            moved = True
+        
+        elif x < -DEADZONE:     # Izquierda
+            send_key(Keycode.LEFT_ARROW)
+            moved = True
+
+        if moved:
+            last_move_time = now
+
+    # -------------------------
+    #   BOTÓN: Colocar rook (X)
+    # -------------------------
+
+    if btn_place.value:
+        send_key(Keycode.X)
+
+    # -------------------------
+    #   BOTÓN: Recoger moneda (Z)
+    # -------------------------
+
+    if btn_coin.value:
+        send_key(Keycode.Z)
+
+    # -------------------------
+    #   BOTÓN: Pausa / Guardar (ESC)
+    # -------------------------
+
+    if btn_pause.value:
+        send_key(Keycode.ESCAPE)
+
+    # -------------------------
+    #   BOTÓN: Cambiar rook (TAB → 1,2,3,4,1...)
+    # -------------------------
+
+    if btn_change.value:
+        rook_selected += 1
+        if rook_selected > 4:
+            rook_selected = 1
+
+        # Emular tecla 1-4
+        send_key(Keycode.KEYPAD_ONE + (rook_selected - 1))
+        time.sleep(0.2)
+
+    # -------------------------
+    #   LEDS
+    #   (De momento tú los activarás desde circuito o eventos del juego)
+    # -------------------------
+
+    # Si quieres que parpadeen cuando los botones se usan:
+    led_avatar.value = btn_coin.value          # LED avatar cuando tomas moneda (ejemplo)
+    led_level.value = btn_place.value          # LED nivel cuando colocas rook (ejemplo)
+
+    time.sleep(0.01)
+
