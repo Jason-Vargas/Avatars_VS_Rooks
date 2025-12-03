@@ -89,10 +89,22 @@ class Tablero(QWidget):
             lbl.setFont(QFont("Courier", 11))
             lbl.setStyleSheet("color: #DDDDDD; padding: 4px;")
 
+        self.lbl_nivel = QLabel("Nivel: -")
+        self.lbl_nivel.setFont(QFont("Courier", 12, QFont.Weight.Bold))
+        self.lbl_nivel.setStyleSheet("color: #FFD700; padding: 6px;")
+        self.lbl_nivel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.lbl_oleada = QLabel("Oleada: -/-")
+        self.lbl_oleada.setFont(QFont("Courier", 11))
+        self.lbl_oleada.setStyleSheet("color: #FFFFFF; padding: 4px;")
+        self.lbl_oleada.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         panel_lateral.addWidget(info_title)
         panel_lateral.addWidget(self.lbl_tipo)
         panel_lateral.addWidget(self.lbl_costo)
         panel_lateral.addWidget(self.lbl_economia)
+        panel_lateral.addWidget(self.lbl_nivel)
+        panel_lateral.addWidget(self.lbl_oleada)
         panel_lateral.addStretch()
 
         # Añadimos a la derecha del tablero
@@ -252,3 +264,40 @@ class Tablero(QWidget):
         self.lbl_tipo.setText(f"Rook: {rook_name}")
         self.lbl_costo.setText(f"Costo: {costo}")
         self.lbl_economia.setText(f"Economía: {economia}")
+    def mostrar_nivel(self, nombre_nivel, oleada, oleadas_totales, color):
+        # Mostrar información del nivel en la UI
+        if not hasattr(self, 'lbl_nivel'):
+            self.lbl_nivel = QLabel()
+            self.lbl_nivel.setFont(QFont("Courier", 12, QFont.Weight.Bold))
+            self.lbl_nivel.setStyleSheet(f"color: {color}; padding: 8px;")
+            self.lbl_nivel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            # Agregar al layout principal (ajustar según tu estructura)
+        
+        self.lbl_nivel.setText(f"{nombre_nivel}")
+        self.lbl_nivel.setStyleSheet(f"color: {color}; padding: 8px; font-size: 14px; font-weight: bold;")
+    
+    def actualizar_oleada(self, oleada_actual, oleadas_totales):
+        if not hasattr(self, 'lbl_oleada'):
+            self.lbl_oleada = QLabel()
+            self.lbl_oleada.setFont(QFont("Courier", 11))
+            self.lbl_oleada.setStyleSheet("color: #FFFFFF; padding: 4px;")
+            # Agregar al layout principal
+        
+        self.lbl_oleada.setText(f"🌊 Oleada: {oleada_actual}/{oleadas_totales}")
+    
+    def mostrar_transicion_nivel(self, nivel, nombre_nivel):
+        # Mostrar mensaje de transición entre niveles
+        msg = f"🎉 NIVEL {nivel-1} COMPLETADO!\n\n▶️ {nombre_nivel}"
+        for f in range(self.filas):
+            for c in range(self.columnas):
+                self.actualizar_celda(f, c, "✨" if (f + c) % 2 == 0 else "🌟")
+        
+        print(msg)
+    
+    def mostrar_victoria(self):
+        # Mostrar pantalla de victoria
+        for f in range(self.filas):
+            for c in range(self.columnas):
+                self.actualizar_celda(f, c, "🏆" if (f + c) % 2 == 0 else "👑")
+        
+        print("🎊 ¡VICTORIA TOTAL! 🎊")

@@ -1,7 +1,7 @@
 from PySide6.QtCore import QTimer
 import json
 import os
-import sys
+from niveles_progresivos import NivelManager
 
 class GameController:
     def __init__(self, tablero):
@@ -18,12 +18,15 @@ class GameController:
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
         self.timer.start(1000)  # 1 segundo por tick
+        self.niveles_progresivos = NivelManager(self) # se debe colocar acá
         self.spawn_timer = QTimer()
-        self.spawn_timer.timeout.connect(self.spawn_avatar)
-        self.spawn_timer.start(10000)  # cada 10 segundos
+        self.spawn_timer.timeout.connect(self.niveles_progresivos.spawn_avatar)
         self.coin_timer = QTimer()
         self.coin_timer.timeout.connect(self.spawn_coin)
         self.coin_timer.start(5000)
+
+        # Niveles
+        self.niveles_progresivos.iniciar_nivel()
 
         # Persistencia
         self.cargar_partida_si_corresponde()
@@ -31,6 +34,8 @@ class GameController:
         # Panel lateral
         self.actualizar_panel()
 
+        # Cargar partida si existe
+        self.actualizar_panel()
 
     # --------------------------------------------
     # REGISTRO DE ENTIDADES
@@ -54,6 +59,10 @@ class GameController:
         self.combate()
         self.limpiar_muertos()
         self.refrescar_tablero()
+        # Verificar si completó el nivel
+        if self.niveles_progresivos.oleada_actual >= self.niveles_progresivos.niveles[self.niveles_progresivos.nivel_actual]["oleadas"]:
+            if len(self.avatars) == 0:  # No quedan avatars
+                self.niveles_progresivos.completar_nivel()
 
     # --------------------------------------------
     # MOVIMIENTO DE AVATARS
@@ -69,8 +78,19 @@ class GameController:
                 return
 
             # Movimiento si cooldown lo permite
-            if avatar.puede_mover(1):
-                avatar.fila -= 1   # ¡Ahora hacia arriba!
+            if avatar.puede_mover(1):                
+                # Verificar si hay rook en la casilla hacia donde quiere avanzar
+                destino_fila = avatar.fila - 1
+                destino_col = avatar.col
+
+                hay_rook = any(
+                    r.fila == destino_fila and r.col == destino_col
+                    for r in self.rooks
+                )
+
+                if not hay_rook:
+                    # Mover
+                    avatar.fila -= 1
 
 
     # --------------------------------------------
@@ -80,11 +100,11 @@ class GameController:
         for avatar in self.avatars:
             for rook in self.rooks:
 
-                # Mismo número de fila
-                if avatar.fila == rook.fila:
+                # Mismo número de columna
+                if avatar.col == rook.col:
 
                     # Si el avatar está justo delante del rook
-                    if avatar.col == rook.col + 1:
+                    if avatar.fila == rook.fila + 1:
 
                         # Avatar ataca
                         if avatar.puede_atacar(1):
@@ -93,7 +113,7 @@ class GameController:
                         # Rook ataca
                         if rook.puede_atacar(1):
                             avatar.recibir_daño(rook.ataque)
-                            # 🔥 Si el avatar muere → sumar economía
+                            # Si el avatar muere → sumar economía
                             if not avatar.esta_vivo():
                                 self.economia += 75
                                 print(f"Avatar derrotado. Economía = {self.economia}")
@@ -175,28 +195,8 @@ class GameController:
         self.tablero.actualizar_celda(fila, col, nueva.simbolo)
 
     def spawn_avatar(self):
-        import random
-        from avatars import Flechador, Escudero, Leñador, Canibal
-
-        col = random.randint(0, self.tablero.columnas - 1)
-        fila = self.tablero.filas - 1  # última fila
-
-        nuevo = Flechador(fila, col)
-        self.avatars.append(nuevo)
-        self.tablero.actualizar_celda(fila, col, nuevo.simbolo)
-        print(f"Spawn avatar en ({fila}, {col})")
-        nuevo = Escudero(fila,col)
-        self.avatars.append(nuevo)
-        self.tablero.actualizar_celda(fila, col, nuevo.simbolo)
-        print(f"Spawn avatar en ({fila}, {col})")
-        nuevo = Leñador(fila,col)
-        self.avatars.append(nuevo)
-        self.tablero.actualizar_celda(fila, col, nuevo.simbolo)
-        print(f"Spawn avatar en ({fila}, {col})")
-        nuevo = Canibal(fila,col)
-        self.avatars.append(nuevo)
-        self.tablero.actualizar_celda(fila, col, nuevo.simbolo)
-        print(f"Spawn avatar en ({fila}, {col})")
+        # Manejado por NivelManager
+        pass
 
     # Persistencia
     def cargar_partida_si_corresponde(self):
@@ -240,6 +240,19 @@ class GameController:
             self.tablero.limpiar_tablero()
         except Exception as e:
             print("WARN: tablero no tiene limpiar_tablero() o falló:", e)
+
+        # RESTAURAR economía
+        self.economia = datos.get("economia", 0)
+
+        # RESTAURAR NIVEL Y OLEADA
+        self.niveles_progresivos.nivel_actual = datos.get("nivel_actual", 1)
+        self.niveles_progresivos.oleada_actual = datos.get("oleada_actual", 1)
+        self.tablero.mostrar_nivel(
+            self.niveles_progresivos.niveles[self.niveles_progresivos.nivel_actual]["nombre"],
+            self.niveles_progresivos.oleada_actual,
+            self.niveles_progresivos.niveles[self.niveles_progresivos.nivel_actual]["oleadas"],
+            self.niveles_progresivos.niveles[self.niveles_progresivos.nivel_actual]["color"]
+        )
 
         # RECONSTRUIR AVATARS
         from avatars import Flechador, Escudero, Leñador, Canibal
@@ -299,12 +312,18 @@ class GameController:
 
     def guardar_partida(self, archivo="savegame.json"):
         print("DEBUG: iniciar guardado...")
+
         datos = {
+            "economia": self.economia,
+            "nivel_actual": self.niveles_progresivos.nivel_actual,
+            "oleada_actual": self.niveles_progresivos.oleada_actual,
+            "game_over": self.game_over,
             "avatars": [],
             "rooks": [],
-            "game_over": self.game_over
+            "monedas": []
         }
 
+        # --- AVATARS ---
         for a in self.avatars:
             datos["avatars"].append({
                 "tipo": type(a).__name__,
@@ -313,6 +332,7 @@ class GameController:
                 "vida": a.vida
             })
 
+        # --- ROOKS ---
         for r in self.rooks:
             datos["rooks"].append({
                 "tipo": type(r).__name__,
@@ -321,15 +341,22 @@ class GameController:
                 "vida": r.vida
             })
 
+        # --- MONEDAS ---
+        for m in self.monedas:
+            datos["monedas"].append({
+                "fila": m.fila,
+                "col": m.col,
+                "valor": m.valor
+            })
+
+        # Guardar archivo
         with open(archivo, "w") as f:
             json.dump(datos, f, indent=4)
         print(f"DEBUG: guardado en {archivo}")
 
-        # marcar meta: la próxima vez cargar la partida
-        meta = {"safe_exit": True}
+        # meta
         with open("savegame_meta.json", "w") as f:
-            json.dump(meta, f)
-        print("DEBUG: meta write load_on_start=True")
+            json.dump({"safe_exit": True}, f)
 
         print("Partida guardada. Cerrando juego...")
         self.salir_del_juego(called_from_save=True)
