@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
-class Tablero(QWidget):
+
+class Tablero(QMainWindow):
     def __init__(self):
         super().__init__()
         self.filas = 9
@@ -10,25 +11,33 @@ class Tablero(QWidget):
         self.sel_fila = 0
         self.sel_columna = 0
         self.celdas = []
-        self.init_ui()
         self.celdas_rojas = []
+        self.colocar_rook_callback = None
+        self.rook_seleccionada = 1  # valor por defecto
+        
+        # ✅ Inicializar game_controller
+        self.game_controller = None
+        
+        self.init_ui()
         self.fila_roja(0)
         self.resaltar_celda(0, 0)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.colocar_rook_callback = None
-        self.rook_seleccionada = 1  # valor por defecto
     
     def init_ui(self):
         # Configurar ventana principal
-        self.setWindowTitle("Matriz Postapocalíptica")
+        self.setWindowTitle("Avatars VS Rooks - Matriz de Combate")
         self.setStyleSheet("background-color: #1a1a1a;")
+        
+        # Widget central
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
     
         # Layout principal
-        layout_principal = QHBoxLayout()
+        layout_principal = QHBoxLayout(central_widget)
         layout_centro = QVBoxLayout()
         
-        # Título apocalíptico
-        titulo = QLabel("◢ SISTEMA DE VIGILANCIA SECTOR 7 ◣")
+        # Título
+        titulo = QLabel("◢ AVATARS VS ROOKS ◣")
         titulo.setFont(QFont("Courier", 12, QFont.Weight.Bold))
         titulo.setStyleSheet("color: #8b0000; padding: 10px;")
         titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -73,7 +82,7 @@ class Tablero(QWidget):
         contenedor_matriz.setLayout(grid_layout)
         layout_centro.addWidget(contenedor_matriz)
 
-        # Panel de información
+        # Panel de información lateral
         panel_lateral = QVBoxLayout()
 
         info_title = QLabel("📊 ESTADO")
@@ -107,85 +116,94 @@ class Tablero(QWidget):
         panel_lateral.addWidget(self.lbl_oleada)
         panel_lateral.addStretch()
 
-        # Añadimos a la derecha del tablero
-        layout_principal.addLayout(layout_centro)
-        layout_principal.addLayout(panel_lateral)
-        
-        self.setLayout(layout_principal)
+        # Añadir layouts
+        layout_principal.addLayout(layout_centro, stretch=3)
+        layout_principal.addLayout(panel_lateral, stretch=1)
     
     def resaltar_celda(self, fila, col):
-        # Dibujar todas las celdas según el estado actual del juego
+        """Redibujar todas las celdas según el estado actual del juego"""
         for f in range(self.filas):
             for c in range(self.columnas):
-
                 contenido = f"[{f},{c}]"  # default
 
                 # Si hay game_controller, pedimos contenido actual
-                if hasattr(self, "game_controller") and self.game_controller is not None:
-
+                if self.game_controller is not None:
                     # ¿Hay moneda?
-                    for m in self.game_controller.monedas:
-                        if m.fila == f and m.col == c:
-                            contenido = m.simbolo
+                    if hasattr(self.game_controller, 'monedas'):
+                        for m in self.game_controller.monedas:
+                            if m.fila == f and m.col == c:
+                                contenido = m.simbolo
 
                     # ¿Hay avatar?
-                    for a in self.game_controller.avatars:
-                        if a.fila == f and a.col == c:
-                            contenido = a.simbolo if hasattr(a, "simbolo") else "A"
+                    if hasattr(self.game_controller, 'avatars'):
+                        for a in self.game_controller.avatars:
+                            if a.fila == f and a.col == c:
+                                contenido = a.simbolo if hasattr(a, "simbolo") else "A"
 
                     # ¿Hay rook?
-                    for r in self.game_controller.rooks:
-                        if r.fila == f and r.col == c:
-                            contenido = r.simbolo if hasattr(r, "simbolo") else "R"
+                    if hasattr(self.game_controller, 'rooks'):
+                        for r in self.game_controller.rooks:
+                            if r.fila == f and r.col == c:
+                                contenido = r.simbolo if hasattr(r, "simbolo") else "R"
 
-                # Actualizamos texto
+                # Actualizar texto
                 self.celdas[f][c].setText(contenido)
 
-                # Estilos
-
-                # ¿Fila roja?
+                # Aplicar estilos
+                # ¿Es fila roja?
                 if (f, c) in self.celdas_rojas:
                     self.celdas[f][c].setStyleSheet("""
-                        background-color: #940901;
-                        color: #630601;
-                        border: 2px inset #630601;
-                        border-radius: 3px;
-                        padding: 5px;
+                        QLabel {
+                            background-color: #940901;
+                            color: #630601;
+                            border: 2px inset #630601;
+                            border-radius: 3px;
+                            padding: 5px;
+                        }
                     """)
                     continue
 
                 # Estilo normal
                 self.celdas[f][c].setStyleSheet("""
-                    background-color: #1c1c1c;
-                    color: #6b8e23;
-                    border: 2px inset #3d3d3d;
-                    border-radius: 3px;
-                    padding: 5px;
+                    QLabel {
+                        background-color: #1c1c1c;
+                        color: #6b8e23;
+                        border: 2px inset #3d3d3d;
+                        border-radius: 3px;
+                        padding: 5px;
+                    }
                 """)
 
-        # Estilo de la celda seleccionada
+        # Resaltar celda seleccionada
         self.celdas[fila][col].setStyleSheet("""
-            background-color: #3a2a2a;
-            color: #ffcc00;
-            border: 3px solid #ffcc00;
-            border-radius: 3px;
-            padding: 5px;
-        """)
-
-    def fila_roja(self, col):
-        self.celdas_rojas = [(0, c) for c in range(self.columnas)]
-        for c in range(self.columnas):
-            self.celdas[0][c].setStyleSheet("""
-                background-color: #940901;
-                color: #630601;
-                border: 2px inset #630601;
+            QLabel {
+                background-color: #3a2a2a;
+                color: #ffcc00;
+                border: 3px solid #ffcc00;
                 border-radius: 3px;
                 padding: 5px;
+            }
+        """)
+
+    def fila_roja(self, fila):
+        """Marca toda una fila como roja (zona peligrosa)"""
+        self.celdas_rojas = [(fila, c) for c in range(self.columnas)]
+        for c in range(self.columnas):
+            self.celdas[fila][c].setStyleSheet("""
+                QLabel {
+                    background-color: #940901;
+                    color: #630601;
+                    border: 2px inset #630601;
+                    border-radius: 3px;
+                    padding: 5px;
+                }
             """)
         
     def keyPressEvent(self, event):
+        """Maneja las teclas presionadas"""
         tecla = event.key()
 
+        # Movimiento con flechas
         if tecla == Qt.Key.Key_Up:
             self.sel_fila = max(0, self.sel_fila - 1)
         elif tecla == Qt.Key.Key_Down:
@@ -194,6 +212,8 @@ class Tablero(QWidget):
             self.sel_columna = max(0, self.sel_columna - 1)
         elif tecla == Qt.Key.Key_Right:
             self.sel_columna = min(self.columnas - 1, self.sel_columna + 1)
+        
+        # Seleccionar tipos de Rook (1-4)
         elif tecla == Qt.Key.Key_1:
             self.rook_seleccionada = 1
             print("Seleccionado: SandRook")
@@ -218,28 +238,36 @@ class Tablero(QWidget):
             if self.game_controller:
                 self.game_controller.actualizar_panel()
             return
+        
+        # Colocar Rook (tecla X)
         elif tecla == Qt.Key.Key_X:
             self.colocar_rook_en_seleccion()
             return
-        elif event.key() == Qt.Key.Key_Z:
-            if hasattr(self, "game_controller") and self.game_controller is not None:
-                self.game_controller.recoger_moneda_en(self.sel_fila, self.sel_columna)
+        
+        # Recoger moneda (tecla Z)
+        elif tecla == Qt.Key.Key_Z:
+            if self.game_controller is not None:
+                if hasattr(self.game_controller, 'recoger_moneda_en'):
+                    self.game_controller.recoger_moneda_en(self.sel_fila, self.sel_columna)
             return
+        
+        # Guardar y salir (ESC)
         elif tecla == Qt.Key.Key_Escape:
-            # Guardar la partida y salir
-            if hasattr(self, "game_controller") and self.game_controller is not None:
-                print("Guardar y salir (tecla ESC)...")
-                # Llamamos al método del controlador
-                self.game_controller.guardar_partida()
+            if self.game_controller is not None:
+                print("💾 Guardando partida...")
+                if hasattr(self.game_controller, 'guardar_partida'):
+                    self.game_controller.guardar_partida()
+                else:
+                    print("⚠️ No hay método guardar_partida en game_controller")
             else:
-                print("No hay game_controller vinculado; no se puede guardar.")
+                print("⚠️ No hay game_controller vinculado")
             return
-        elif event.key() == Qt.Key.Key_Z:
-            print(f"Celda seleccionada: ({self.sel_fila}, {self.sel_columna})")
-            return
+        
         else:
+            # Tecla no reconocida
             return
 
+        # Actualizar resaltado después de movimiento
         self.resaltar_celda(self.sel_fila, self.sel_columna)
 
     def actualizar_celda(self, fila, col, texto):
@@ -252,41 +280,35 @@ class Tablero(QWidget):
         if 0 <= fila < self.filas and 0 <= col < self.columnas:
             return self.celdas[fila][col]
         return None
+    
     def colocar_rook_en_seleccion(self):
+        """Coloca una rook en la celda seleccionada"""
         if self.colocar_rook_callback:
             self.colocar_rook_callback(self.sel_fila, self.sel_columna, self.rook_seleccionada)
 
     def limpiar_tablero(self):
+        """Limpia todas las celdas del tablero"""
         for f in range(self.filas):
             for c in range(self.columnas):
                 self.actualizar_celda(f, c, f"[{f},{c}]")
+    
     def actualizar_panel(self, rook_name, costo, economia):
+        """Actualiza el panel lateral con información"""
         self.lbl_tipo.setText(f"Rook: {rook_name}")
         self.lbl_costo.setText(f"Costo: {costo}")
         self.lbl_economia.setText(f"Economía: {economia}")
+    
     def mostrar_nivel(self, nombre_nivel, oleada, oleadas_totales, color):
-        # Mostrar información del nivel en la UI
-        if not hasattr(self, 'lbl_nivel'):
-            self.lbl_nivel = QLabel()
-            self.lbl_nivel.setFont(QFont("Courier", 12, QFont.Weight.Bold))
-            self.lbl_nivel.setStyleSheet(f"color: {color}; padding: 8px;")
-            self.lbl_nivel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            # Agregar al layout principal (ajustar según tu estructura)
-        
+        """Muestra información del nivel en la UI"""
         self.lbl_nivel.setText(f"{nombre_nivel}")
         self.lbl_nivel.setStyleSheet(f"color: {color}; padding: 8px; font-size: 14px; font-weight: bold;")
     
     def actualizar_oleada(self, oleada_actual, oleadas_totales):
-        if not hasattr(self, 'lbl_oleada'):
-            self.lbl_oleada = QLabel()
-            self.lbl_oleada.setFont(QFont("Courier", 11))
-            self.lbl_oleada.setStyleSheet("color: #FFFFFF; padding: 4px;")
-            # Agregar al layout principal
-        
+        """Actualiza el contador de oleadas"""
         self.lbl_oleada.setText(f"🌊 Oleada: {oleada_actual}/{oleadas_totales}")
     
     def mostrar_transicion_nivel(self, nivel, nombre_nivel):
-        # Mostrar mensaje de transición entre niveles
+        """Muestra mensaje de transición entre niveles"""
         msg = f"🎉 NIVEL {nivel-1} COMPLETADO!\n\n▶️ {nombre_nivel}"
         for f in range(self.filas):
             for c in range(self.columnas):
@@ -295,7 +317,7 @@ class Tablero(QWidget):
         print(msg)
     
     def mostrar_victoria(self):
-        # Mostrar pantalla de victoria
+        """Muestra pantalla de victoria"""
         for f in range(self.filas):
             for c in range(self.columnas):
                 self.actualizar_celda(f, c, "🏆" if (f + c) % 2 == 0 else "👑")
